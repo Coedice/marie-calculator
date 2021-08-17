@@ -1,0 +1,237 @@
+﻿userInput, Input / Ask user for operation ("m" for multiplication, "d" for division, "e" for exponent, and "q" to quit)
+Store operation
+
+/ If operation == "q", halt the program
+Subt lowerQ
+Skipcond 400
+Jump askForOperands
+Halt
+
+/ Get operands x and y from user
+askForOperands, Input / First number in operation
+Store x
+Input / Second number in operation
+Store y
+
+/ If operation == "m", call multiplication subroutine
+Load operation
+Subt lowerM
+Skipcond 400
+Jump checkForDivision
+Load x
+Store multiplyX
+Load y
+Store multiplyY
+JnS subMultiply
+Output
+Halt
+
+/ If operation == "d", call division subroutine
+checkForDivision, Load operation
+Subt lowerD
+Skipcond 400
+Jump checkForExponent
+Load x
+Store divideX
+Load y
+Store divideY
+JnS subDivide
+Output
+Load divisionRemainder
+Output
+Halt
+
+
+/ If operation == "e", call exponent subroutine
+checkForExponent, Load operation
+Subt lowerE
+Skipcond 400
+Jump userInput / No valid operation entered
+Load x
+Store exponentX
+Load y
+Store exponentY
+JnS subExponent
+Output
+Halt
+
+
+
+/ ********** Multiplication subroutine start
+multiplyX, Dec 0
+multiplyY, Dec 0
+subMultiply, Dec 0 / The address to continue from when the subroutine is complete
+Load zero
+Store runningProduct
+
+/ Move the negative sign from Y to X, if Y is negative
+Load multiplyY
+Skipcond 000
+Jump setMultiplicationRemainingLoops
+Load zero
+Subt multiplyY
+Store multiplyY
+Load zero
+Subt multiplyX
+Store multiplyX
+
+setMultiplicationRemainingLoops, Load multiplyY
+Store multiplicationRemainingLoops
+
+/ multiplication while loop start (multiplicationRemainingLoops > 0)
+multiplicationLoopStart, Load multiplicationRemainingLoops
+Skipcond 800
+Jump multiplicationReturn
+Load multiplyX
+Add runningProduct
+Store runningProduct
+Load multiplicationRemainingLoops
+Subt one
+Store multiplicationRemainingLoops
+Jump multiplicationLoopStart
+/ multiplication loop end
+
+multiplicationReturn, Load runningProduct
+JumpI subMultiply / Return
+
+runningProduct, Dec 0
+multiplicationRemainingLoops, Dec 0
+/ ********** Multiplication subroutine end
+
+
+
+
+/ ********** Division subroutine start
+divideX, Dec 0
+divideY, Dec 0
+subDivide, Dec 0 / The address to continue from when the divison subroutine is complete
+
+/ Check for divide by zero error
+Load divideY
+Skipcond 400
+Jump notDivideByZeroError
+Halt
+
+/ Reset divisionLoopsCount value
+notDivideByZeroError, Load zero
+Store divisionLoopsCount
+
+/ Determine the sign of the division and set divideX and divideY to their absolute values
+load one
+Store divisionSign
+Load divideX
+Skipcond 000
+Jump isYNegative
+Load zero
+Subt divisionSign
+Store divisionSign
+Load zero
+Subt divideX
+Store divideX
+isYNegative, Load divideY
+Skipcond 000
+Jump setRunningDivision
+Load zero
+Subt divisionSign
+Store divisionSign
+Load zero
+Subt divideY
+Store divideY
+
+setRunningDivision, Load divideX
+Store runningDivision
+
+/ Division while loop start (runningDivision >= divideY)
+divisionLoopStart, Load runningDivision
+Subt divideY
+Add one
+Skipcond 800
+Jump checkForDivisionSign
+Load runningDivision
+Subt divideY
+Store runningDivision
+Load divisionLoopsCount
+Add one
+Store divisionLoopsCount
+Jump divisionLoopStart
+/ Division while loop end
+
+/ Check if result should be negative
+checkForDivisionSign, Load divisionSign
+Skipcond 000
+Jump divisionReturn
+Load zero
+Subt divisionLoopsCount
+Store divisionLoopsCount
+
+divisionReturn, Load runningDivision
+Store divisionRemainder
+Load divisionLoopsCount
+JumpI subDivide / Return
+
+runningDivision, Dec 0
+divisionLoopsCount, Dec 0
+divisionSign, Dec 1 / -1 for negative, 1 for positive
+divisionRemainder, Dec 0
+/ ********** Division subroutine end
+
+
+
+/ ********** Exponent subroutine start
+exponentX, Dec 0
+exponentY, Dec 0
+subExponent, Dec 0 / The address to continue from when the subroutine is complete
+
+/ Check inputs are in valid range
+Load exponentY / If exponentY is negative
+Skipcond 000
+Jump inputsValid / exponentY is positive
+/ else if exponentX == 1 (This is the only value for which a negative exponent would be an integer)
+Load exponentX
+Subt one
+Skipcond 400
+Halt / If false, Inputs invalid
+/ If true, set exponentY = abs(exponentY)
+Load zero
+Subt exponentY
+Store exponentY
+
+/ Set defaults
+inputsValid, Load one
+Store runningExponential
+Load exponentY
+Store exponentialRemainingLoops
+
+/ Exponent while loop start (remainingLoops > 0)
+exponentLoopStart, Load exponentialRemainingLoops
+Skipcond 800
+Jump exponentReturn
+Load runningExponential
+Store multiplyX
+Load exponentX
+Store multiplyY
+JnS subMultiply
+Store runningExponential
+Load exponentialRemainingLoops
+Subt one
+Store exponentialRemainingLoops
+Jump exponentLoopStart
+/ Exponent while loop end
+
+exponentReturn, Load runningExponential
+JumpI subExponent / Return
+
+exponentialRemainingLoops, Dec 0
+runningExponential, Dec 1
+/ ********** Exponent subroutine end
+
+
+operation, Dec 0
+x, Dec 0
+y, Dec 0
+lowerQ, Hex 71
+lowerM, Hex 6D
+lowerD, Hex 64
+lowerE, Hex 65
+zero, Dec 0
+one, Dec 1
